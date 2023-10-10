@@ -9,7 +9,7 @@ please link to the original discussion if you can (but *do* **summarize**).
 
 Try to indicate how controversial you expect a particular guideline to be.
 
-The goal o this repo is to collect the raw materials for an informational PEP,
+The goal of this repo is to collect the raw materials for an informational PEP,
 to be co-authored by the C-API workgroup members (we don't know who that will be).
 
 For more radical proposals (e.g. HPy),
