@@ -116,7 +116,7 @@ These guidelines only apply to API that is:
 
 * *Newly added*. Existing API does not necessarily follow these guidelines;
   this PEP is not the place for plans to replace, deprecate or remove it.
-* *Pubic*: meant for users. That is, not in the *private* or *internal*
+* *Public*: meant for users. That is, not in the *private* or *internal*
   tiers as defined in the next section.
 
 Note that we have a style guide, :pep:`7`, which applies to *all* C code
