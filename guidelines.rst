@@ -30,12 +30,12 @@ TODO: Write the abstract last :)
 About this document
 ===================
 
-These guidelines represent the consensus of the C API working group,
+These guidelines represent the consensus of the C API Working Group,
 established in :pep:`731` to oversee and coordinate
-the development and maintenance of the Python C API.
+the development and maintenance of the CPython C API.
 
 It is a living document. It can be changed with the approval of either
-all members of the C API working group, or the Steering Council.
+all members of the C API Working Group, or the Steering Council.
 
 
 High-level goals
@@ -66,20 +66,20 @@ Don't panic!
 We do not expect you, fellow CPython contributor, to read and remember
 all of the guidelines.
 If you have any doubts, or if you find that the guidelines are unclear,
-incomplete or contradictory, ask the C API working group for help
+incomplete or contradictory, ask the C API Working Group for help
 and clarifications.
 
 
 Working group approvals
 -----------------------
 
-In several cases, you should seek approval from the C API working group
+In several cases, you should seek approval from the C API Working Group
 before changing public C API.
 Most notably:
 
 * when the guidelines tell you to do so,
 * when adding an exception to the rules,
-* when adding to the limited API,
+* when adding to the *limited* API,
 * when adding something that is likely to establish precedent,
 * when adding many APIs at once, or
 * when the guidelines are unclear or don't make sense.
@@ -100,7 +100,7 @@ Where possible, exceptions to these guidelines should be added as
 Such exceptions should be clearly identifiable from their names.
 
 If you want to add an exception that is not mentioned in the guidelines,
-please request approval from the C API workgroup.
+please request approval from the C API Working Group.
 
 .. note:: 
 
@@ -114,9 +114,9 @@ Applicability
 
 These guidelines only apply to API that is:
 
-* *Newly added*. Existing API does not necessarily follow these guidelines;
+* *Newly added*: existing API does not necessarily follow these guidelines;
   this PEP is not the place for plans to replace, deprecate or remove it.
-* *Public*: meant for users. That is, not in the *private* or *internal*
+* *Public*: meant for users; that is, not in the *private* or *internal*
   tiers as defined in the next section.
 
 Note that we have a style guide, :pep:`7`, which applies to *all* C code
@@ -126,7 +126,7 @@ in CPython, including the API.
 API tiers
 ---------
 
-Python has several tiers of C API.
+CPython has several tiers of C API.
 The more stable the tier is, the stricter the rules for it are:
 
 *  For **internal** API (only accessible with ``Py_BUILD_CORE``, or not declared
@@ -143,8 +143,8 @@ The more stable the tier is, the stricter the rules for it are:
 *  In the **general** public API, these guidelines apply in full force.
    The C API working group can grant exceptions.
 
-*  For the **limited** API, please get explicit approval from the
-   C API working group for any changes.
+*  For the **limited** API, always seek explicit approval from the
+   C API Working Group.
 
 
 .. note:: 
@@ -168,7 +168,7 @@ Public API should type-check all objects passed to it.
 When it gets an object of an unexpected type, public API should fail with
 ``TypeError`` rather than crash.
 
-As an exception, with approval from the C API WG you can use concrete types,
+As an exception, with approval from the C API Working Group you can use concrete types,
 such as ``PyTypeObject*``, ``PyCodeObject*`` & ``PyFrameObject*``,
 for consistency with existing API.
 These objects should be type-checked as if they were ``PyObject*``.
