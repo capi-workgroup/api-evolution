@@ -1,6 +1,12 @@
 PEP: 9999
 Title: Guidelines for Python's C API
 Author: Petr Viktorin <encukou@gmail.com>,
+        Guido van Rossum <guido@python.org>,
+        Victor Stinner <vstinner@python.org>,
+        Steve Dower <steve.dower@python.org>,
+        Erlend Egeberg Aasland <erlend@python.org>,
+        Serhiy Storchaka,
+        Michael Droettboom,
 Discussions-To: https://discuss.python.org/c/c-api/30
 Status: Draft
 Type: Process
@@ -12,13 +18,6 @@ Post-History: XXX
 
    This is a **incomplete draft**, published for initial discussion.
    It is likely to be amended substantially.
-
-.. Authors to be added:
-
-        Guido van Rossum <guido@python.org>,
-        Victor Stinner <vstinner@python.org>,
-        Steve Dower <steve.dower@python.org>,
-        Irit Katriel <irit@python.org>
 
 
 Abstract
