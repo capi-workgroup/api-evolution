@@ -157,12 +157,12 @@ The more stable the tier is, the stricter the rules for it are:
 One header
 ==========
 
-All public API should be available after including ``Python.h``.
+All public API should be available after including :file:`Python.h`.
 
 To allow selecting an alternate API, such as a subset,
 use feature flags/macros that users define before including the header
-(e.g. ``Py_LIMITED_API``).
-Adding such a feature macro needs approval from the C API working group.
+(for example ``Py_LIMITED_API``).
+Adding such a feature macro needs approval from the C API Working Group.
 
 .. note::
 
@@ -192,14 +192,14 @@ typedefs, structs, enums, etc.; not to parameters or struct fields.
 
 The ``Py_`` prefix is reserved for global service routines like
 ``Py_FatalError``; specific groups of APIs use a longer prefix,
-e.g. ``PyUnicode_`` for string functions.
+for example ``PyUnicode_`` for string functions.
 Use an existing prefix when applicable. If you want to add a new prefix,
-contact the C API working group.
+contact the C API Working Group.
 
 The ``Py_`` prefix is in mixed case, even in macro names.
 For example: ``PyUnicode_AS_STRING``.
 (Several existing macros use the upper-case ``PY``; if you need this prefix
-for consistency, please get approval from the C API working group.)
+for consistency, please get approval from the C API Working Group.)
 
 Unstable API is prefixed with ``PyUnstable_`` instead of ``Py``,
 for example ``PyUnstable_Long_IsCompact`` or (hypothetically)
@@ -242,7 +242,7 @@ Public C API must be compatible with:
   - Atomics (``!__STDC_NO_ATOMICS__``, or MSVC)
 
 - C99
-- C88 with several select C99 features:
+- C89 with several select C99 features:
 
   - ``<stdint.h>`` and ``<inttypes.h>``
   - ``static inline`` functions
