@@ -180,7 +180,7 @@ Naming
 
 [TODO: PEP 7 should be updated to link here once this PEP goes live.]
 
-All public names must be prefixed with ``Py``.
+All newly added public names must be prefixed with ``Py``.
 
 Names that users should not use directly, but need to be visible to the
 compiler/linker, should be prefixed with ``_Py``.
@@ -196,7 +196,7 @@ for example ``PyUnicode_`` for string functions.
 Use an existing prefix when applicable. If you want to add a new prefix,
 contact the C API Working Group.
 
-The ``Py_`` prefix is in mixed case, even in macro names.
+The ``Py`` prefix is in mixed case, even in macro names.
 For example: ``PyUnicode_AS_STRING``.
 (Several existing macros use the upper-case ``PY``; if you need this prefix
 for consistency, please get approval from the C API Working Group.)
