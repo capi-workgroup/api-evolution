@@ -215,8 +215,7 @@ for example ``PyUnstable_Long_IsCompact`` or (hypothetically)
 Do not reuse names
 ------------------
 
-If an API's behavior changes in a backwards-incompatible way,
-for example when a function's signature changes,
+If an API's interface or behavior changes in a backwards-incompatible way,
 add new API with a new name.
 You can deprecate and remove the old version following Python's
 :pep:`backwards compatibility policy <387>`.
