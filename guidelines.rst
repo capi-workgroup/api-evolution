@@ -252,8 +252,13 @@ Public C API must be compatible with:
 - C++03
 
 It is OK to use other features -- compiler-specific ones,
-optional standard ones, or platform-specific ones -- if the behavior of
-correct user code is the same as with a standard compiler.
+optional standard ones, or platform-specific ones -- if:
+
+- the behavior of correct user code is the same as with a standard compiler,
+- the feature is detected using appropriate preprocessor checks, and
+- their use does not produce warnings on any supported compiler,
+  including earlier versions of the one it is specific to.
+
 For example, compiler-specific code is often used to improve performance
 or compiler diagnostics.
 
