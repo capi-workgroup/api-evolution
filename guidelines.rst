@@ -276,9 +276,6 @@ which needs to be documented as such and have a feature test macro
 All function declarations and definitions must use full prototypes,
 that is, the types of all arguments must be specified.
 
-Argument *names* should generally be included in declarations,
-but may be omitted if the meaning is obvious.
-
 .. note::
 
     For background and discussions, see:
