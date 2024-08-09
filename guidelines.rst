@@ -264,7 +264,7 @@ or compiler diagnostics.
 
 It is also OK to use these other features for platform-specific API,
 which needs to be documented as such and have a feature test macro
-(for example, ``PY_HAVE_THREAD_NATIVE_ID``).
+(for example, ``Py_HAVE_C_COMPLEX``).
 
 .. note::
 
