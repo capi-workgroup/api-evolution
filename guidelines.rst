@@ -154,6 +154,135 @@ The more stable the tier is, the stricter the rules for it are:
     - https://github.com/capi-workgroup/api-evolution/issues/42 (for limited API)
 
 
+One header
+==========
+
+All public API should be available after including :file:`Python.h`.
+
+To allow selecting an alternate API, such as a subset,
+use feature flags/macros that users define before including the header
+(for example ``Py_LIMITED_API``).
+Adding such a feature macro needs approval from the C API Working Group.
+
+.. note::
+
+    For background and discussions, see:
+
+    - https://github.com/capi-workgroup/api-evolution/issues/34
+
+
+.. XXX add a PEP number prefix to the anchor:
+
+.. _naming:
+
+Naming
+======
+
+[TODO: PEP 7 should be updated to link here once this PEP goes live.]
+
+All newly added public names must be prefixed with ``Py``.
+
+Names that users should not use directly, but need to be visible to the
+compiler/linker, should be prefixed with ``_Py``.
+(Such names are not considered public API, that is, they should not appear in
+third-party source code.)
+
+This applies to all names in a global namespace: functions, macros, variables,
+typedefs, structs, enums, etc.; not to parameters or struct fields.
+
+The ``Py_`` prefix is reserved for global service routines like
+``Py_FatalError``; specific groups of APIs use a longer prefix,
+for example ``PyUnicode_`` for string functions.
+Use an existing prefix when applicable. If you want to add a new prefix,
+contact the C API Working Group.
+
+The ``Py`` prefix is in mixed case, even in macro names.
+For example: ``PyUnicode_AS_STRING``.
+(Several existing macros use the upper-case ``PY``; if you need this prefix
+for consistency, please get approval from the C API Working Group.)
+
+Unstable API is prefixed with ``PyUnstable_`` instead of ``Py``,
+for example ``PyUnstable_Long_IsCompact`` or (hypothetically)
+``PyUnstable_String_GET_SIZE``.
+
+.. note::
+
+    For background and discussions, see:
+
+    - https://github.com/capi-workgroup/api-evolution/issues/21
+
+
+Do not reuse names
+------------------
+
+If an API's interface or behavior changes in a backwards-incompatible way,
+add new API with a new name.
+You can deprecate and remove the old version following Python's
+:pep:`backwards compatibility policy <387>`.
+
+After API has been removed, do not reuse the old name,
+since existing documentation and tutorials will continue to refer to the
+old behavior.
+
+
+Language support
+================
+
+C standard and dialect
+----------------------
+
+[TODO: PEP 7 should be updated to link here once this PEP goes live.]
+
+Public C API must be compatible with:
+
+- C11, with optional features needed by CPython:
+
+  - IEEE 754 floating point
+  - Atomics (``!__STDC_NO_ATOMICS__``, or MSVC)
+
+- C99
+- C89 with several select C99 features:
+
+  - ``<stdint.h>`` and ``<inttypes.h>``
+  - ``static inline`` functions
+  - designated initializers
+  - intermingled declarations
+  - line comments (``//``)
+
+- C++03
+
+It is OK to use other features -- compiler-specific ones,
+optional standard ones, or platform-specific ones -- if:
+
+- the behavior of correct user code is the same as with a standard compiler,
+- the feature is detected using appropriate preprocessor checks, and
+- their use does not produce warnings on any supported compiler,
+  including earlier versions of the one it is specific to.
+
+For example, compiler-specific code is often used to improve performance
+or compiler diagnostics.
+
+It is also OK to use these other features for platform-specific API,
+which needs to be documented as such and have a feature test macro
+(for example, ``Py_HAVE_C_COMPLEX``).
+
+.. note::
+
+   The existing API uses a few C11 features which are
+   commonly available as compiler extensions to C99.
+   In particular, we do use an unnamed union.
+   New API should not use these features.
+
+All function declarations and definitions must use full prototypes,
+that is, the types of all arguments must be specified.
+
+.. note::
+
+    For background and discussions, see:
+
+    - https://github.com/capi-workgroup/api-evolution/issues/22
+
+
 Types
 =====
 
