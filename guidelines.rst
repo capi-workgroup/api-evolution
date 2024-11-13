@@ -307,7 +307,7 @@ For example:
    the same behavior. Typically, this allows better performance for C/C++.
    See `shadowing example`_.
 *  A function that uses C-specific types, such as ``PyLong_AsLongLong``,
-   is OK if equivalent functions are provided for the preferred types.
+   is OK if equivalent functions are provided for :ref:`the preferred types <types>`.
 *  A variadic function is OK if there's an equivalent function
    that takes an array.
 
@@ -334,6 +334,7 @@ working group.
 
     For background and discussions, see:
 
+    - :pep:`670`
     - https://github.com/capi-workgroup/api-evolution/issues/11 (Treat the ABI as an API)
     - https://github.com/capi-workgroup/api-evolution/issues/18 (Avoid macros and static inline functions)
     - https://github.com/capi-workgroup/api-evolution/issues/12 (variadics)
@@ -371,14 +372,14 @@ Enums and bitfields
 -------------------
 
 Avoid ``enum``, which have compiler-/platform-dependent size.
-(CPython can not yet use C23's fixed underlying `enum` types.)
+(CPython cannot yet use C23's fixed underlying `enum` types.)
 Instead, use ``int`` with defined constants.
 
-Also avoid bitfields, which have compiler-/platform-dependent memory layout.
+Avoid bitfields, which have compiler-/platform-dependent memory layout.
 Instead, use fixed width integer types and bitmask constants.
 
-To be clear: it is fine to use ``enum`` and bitfields outside the
-public headers.
+To be clear: it is fine to use ``enum`` and bitfields within CPython sources,
+provided they do not need to be used in public headers.
 
 
 Objects
@@ -445,7 +446,7 @@ See `return schemes`_ for concrete examples.
 Exceptions for infallible functions
 -----------------------------------
 
-Some functions can not fail, and callers cannot check for exceptions:
+Some functions cannot fail, and callers cannot check for exceptions:
 
 * Deallocators and reference sinks like ``PyMem_Free`` and ``Py_DECREF``,
   which use ``void`` as the return type.
@@ -496,10 +497,10 @@ for example:
 Guidelines for output arguments:
 
 * Functions must always fill in the output arguments. If an error
-  occurs or the rseult is not available, the output should typically be set
-  to NULL or zero.
+  occurs or the result is not available, the output should typically be set
+  to ``NULL`` or zero.
 * When it might be useful for users to call a function but ignore an output,
-  allow passing NULL as the output argument.
+  allow passing ``NULL`` as the output argument.
 * Ownership of a ``PyObject*`` result is transferred to the caller,
   as with return values.
   [TODO: Link to guidelines about ownership & borrowing, when those are added]
@@ -566,17 +567,17 @@ Here are common schemes of how to encode return values.
 
 *  Yes or no: return ``int``
 
-   *  ``0`` for ``false``
    *  ``1`` for ``true``
+   *  ``0`` for ``false``
    *  ``-1``, with an exception set, for failure
 
 *  Lookup (“getattr”, “getitem” or “setdefault” style) functions: return
    ``int``; the lookup result is passed via an
    :ref:`output argument <output argument>`):
 
+   *  ``1`` for “found” (*result* is set)
    *  ``0`` for “not found”
       (*result* is set to ``NULL`` or other zero/empty value)
-   *  ``1`` for “found” (*result* is set)
    *  ``-1``, with an exception set, for failure
       (*result* is set to ``NULL`` or other zero/empty value)
 
