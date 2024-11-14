@@ -356,13 +356,15 @@ Instead, use:
 *  ``int32_t`` and other C99+ fixed width integer types
 *  ``Py_ssize_t``, ``intptr_t``, ``ptrdiff_t`` for values of the appropriate
    platform-specific types
-*  ``char``
 *  ``double`` (IEEE 754 ``binary64``)
 
-The only exception is ``int``, which should be used for small ranges
-(typically, as a replacement for enum).
+As an exception, use ``int`` for small ranges (typically, as a replacement
+for enum).
 If the 16-bit limit is relevant, and for all unsigned values, prefer
 explicit fixed width types over ``int``.
+
+As another exception, use ``char*`` for UTF-8/ASCII strings (and ``char``
+for bytes of such text). For byte-strings, prefer ``uint8_t*`` or ``void*``.
 
 For memory sizes and byte counts, use the signed ``Py_ssize_t``,
 not the unsigned ``size_t``.
