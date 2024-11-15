@@ -308,8 +308,12 @@ For example:
    See `shadowing example`_.
 *  A function that uses C-specific types, such as ``PyLong_AsLongLong``,
    is OK if equivalent functions are provided for :ref:`the preferred types <types>`.
-*  A variadic function is OK if there's an equivalent function
-   that takes an array.
+*  A variadic function is OK if there's an non-variadic function
+   with equivalent functionality.
+   Usually, the equivalent take an array or pre-constructed
+   Python object: for example, `PyObject_Vectorcall` is the equivalent
+   for `PyObject_CallFunction`; `PySys_AuditTuple` for `PySys_Audit`;
+   `PyErr_SetObject` for `PyErr_Format`.
 
 Macros can be used in the following cases:
 
