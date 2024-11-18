@@ -282,8 +282,110 @@ that is, the types of all arguments must be specified.
     - https://github.com/capi-workgroup/api-evolution/issues/22
 
 
+Portable subset of C
+--------------------
+
+While the C API is defined in terms of the C language, it supports building
+wrappers for languages other than C, such as Rust, Java, assembly, or
+Python with ``ctypes``.
+These wrappers cannot realisically use a full-featured C parser.
+To make the public API easier to describe and wrap, it should
+avoid some of C's features:
+
+*  Avoid ``static inline`` functions and macros.
+   All functions must be exported as actual library symbols.
+*  Avoid variadic functions.
+*  Avoid C-specific types like ``long long``, ``enum`` or bit fields
+   (see :ref:`types`).
+
+Once you add API that conforms to this “portable subset”,
+you can add additional C/C++-specific API. Usually, the additional API
+will be either more performant, or easier to use from C.
+For example:
+
+*  A function may be shadowed by a ``static inline`` function or macro with
+   the same behavior. Typically, this allows better performance for C/C++.
+   See `shadowing example`_.
+*  A function that uses C-specific types, such as ``PyLong_AsLongLong``,
+   is OK if equivalent functions are provided for :ref:`the preferred types <types>`.
+*  A variadic function is OK if there's a non-variadic function
+   with equivalent functionality.
+   Usually, the equivalent take an array or pre-constructed
+   Python object: for example, `PyObject_Vectorcall` is the equivalent
+   for `PyObject_CallFunction`; `PySys_AuditTuple` for `PySys_Audit`;
+   `PyErr_SetObject` for `PyErr_Format`.
+
+Macros can be used in the following cases:
+
+*  Feature flags (e.g. ``HAVE_FORK``, ``Py_LIMITED_API``)
+*  Simple constants (e.g. ``Py_TPFLAGS_BASETYPE``, ``PY_VERSION_HEX``).
+*  Shortcuts for functionality that can be accomplished trivially,
+   but perhaps tediously, without macros (e.g. ``Py_VISIT``,
+   ``Py_BEGIN_ALLOW_THREADS``, ``Py_RETURN_RICHCOMPARE``).
+   In this case, the macro-less equivalent should be clear from documentation:
+   consider adding the macro's expansion to the docs.
+   Non-C wrappers are expected re-implement these macros.
+*  Features that aren't needed in non-C languages (e.g. ``Py_MAX``,
+   ``Py_STRINGIFY``).
+*  Macros used to define the API (e.g. ``PyAPI_FUNC``, ``Py_ALWAYS_INLINE``,
+   ``Py_OBJECT_H``).
+*  As an implementation detail (for example, when shadowing a function).
+
+As always, new exceptions can be added with approval from the C API
+working group.
+
+.. note::
+
+    For background and discussions, see:
+
+    - :pep:`670`
+    - https://github.com/capi-workgroup/api-evolution/issues/11 (Treat the ABI as an API)
+    - https://github.com/capi-workgroup/api-evolution/issues/18 (Avoid macros and static inline functions)
+    - https://github.com/capi-workgroup/api-evolution/issues/12 (variadics)
+
+
+.. _types:
+
 Types
 =====
+
+Arithmetic types
+----------------
+
+Avoid types with compiler-/platform-specific sizes, such as  ``long``
+or ``unsigned short``.
+
+Instead, use:
+
+*  ``int32_t`` and other C99+ fixed width integer types
+*  ``Py_ssize_t``, ``intptr_t``, ``ptrdiff_t`` for values of the appropriate
+   platform-specific types
+*  ``double`` (IEEE 754 ``binary64``)
+
+As an exception, use ``int`` for small ranges (typically, as a replacement
+for enum).
+If the 16-bit limit is relevant, and for all unsigned values, prefer
+explicit fixed width types over ``int``.
+
+As another exception, use ``char*`` for UTF-8/ASCII strings (and ``char``
+for bytes of such text). For byte-strings, prefer ``uint8_t*`` or ``void*``.
+
+For memory sizes and byte counts, use the signed ``Py_ssize_t``,
+not the unsigned ``size_t``.
+
+
+Enums and bitfields
+-------------------
+
+Avoid ``enum``, which have compiler-/platform-dependent size.
+(CPython cannot yet use C23's fixed underlying `enum` types.)
+Instead, use ``int`` with defined constants.
+
+Avoid bitfields, which have compiler-/platform-dependent memory layout.
+Instead, use fixed width integer types and bitmask constants.
+
+To be clear: it is fine to use ``enum`` and bitfields within CPython sources,
+provided they do not need to be used in public headers.
 
 
 Objects
@@ -309,3 +411,193 @@ These objects should be type-checked as if they were ``PyObject*``.
     - https://github.com/capi-workgroup/api-evolution/issues/29
     - https://github.com/capi-workgroup/decisions/issues/19
 
+
+Return values
+=============
+
+The return value of a function must indicate whether an exception was set.
+It must not be necessary to use ``PyErr_Occurred`` to disambiguate.
+(Recall that these guidelines apply to *new* API; existing API does not
+necessarily follow this.)
+
+Generally, API functions can return one of:
+
+*  An integral value, where ``-1`` is returned if and only if an exception was
+   set, and other values signal an absence of exception.
+*  A pointer, where ``NULL`` is returned if and only if an exception was set.
+*  A few special cases:
+
+   -  Functions that never return, or always set an exception, should use
+      the :c:expr:`void` return type.
+   -  Functions used when the runtime might not be initialized
+      should either:
+
+      *  return ``PyStatus``, or
+      *  return ``-1``/``NULL`` to signal failure, but have an alternate way
+         of reporting error details.
+
+In cases where ``-1`` or ``NULL`` is a valid result, use an
+:ref:`output argument <output argument>` to provide that result.
+
+See `return schemes`_ for concrete examples.
+
+.. note::
+
+    For background and discussions, see:
+
+    - https://github.com/capi-workgroup/api-evolution/issues/13
+    - https://github.com/capi-workgroup/decisions/issues/19
+
+
+Exceptions for infallible functions
+-----------------------------------
+
+Some functions cannot fail, and callers cannot check for exceptions:
+
+* Deallocators and reference sinks like ``PyMem_Free`` and ``Py_DECREF``,
+  which use ``void`` as the return type.
+
+Other functions cannot fail, and users may *optionally* skip error
+checking:
+
+* Refcounting operations, like ``Py_NewRef``.
+* Operations on native types that cannot have exceptional cases
+  (e.g. overflow), like ``Py_HashPointer``.
+* Subtype-checking functions, like ``PyTuple_Check`` and ``PyTuple_CheckExact``,
+  which return either ``0`` or ``1``.
+  (This does not extend to *subclass* checking, like ``PyObject_IsSubclass``,
+  which can call Python code.)
+
+Even in these cases, ``-1`` and ``NULL`` are reserved for errors;
+infallible functions must never return these values.
+(This allows auto-generated API wrappers to avoid unnecessary special cases.)
+
+As always, other exceptions can be added here with approval from the
+C API working group.
+
+Mind that infallibility is very often an implementation detail
+that should not be exposed in the API. That is, some functions'
+*current CPython implementations* cannot fail,
+but we may want the function to fail (or warn) in the future.
+Users should only skip error checking if the function's documentation
+explicitly allows it.
+
+
+.. _output argument:
+
+Output arguments
+================
+
+.. (There's nothing to say for *arguments* in general, it's all under
+   types or reference conting.
+   If that changes, "Output arguments" should be a subsection of "Arguments")
+
+Output arguments are pointers to memory that a function fills in.
+Use these when a result from a function cannot be returned as the return value,
+for example:
+
+* ``-1`` or ``NULL`` is a valid (non-exceptional) result: for example,
+  in ``PyDict_GetItemRef``.
+* There are multiple results: for example, in ``PyUnicode_AsUTF8AndSize``.
+
+Guidelines for output arguments:
+
+* Functions must always fill in the output arguments. If an error
+  occurs or the result is not available, the output should typically be set
+  to ``NULL`` or zero.
+* When it might be useful for users to call a function but ignore an output,
+  allow passing ``NULL`` as the output argument.
+* Ownership of a ``PyObject*`` result is transferred to the caller,
+  as with return values.
+  [TODO: Link to guidelines about ownership & borrowing, when those are added]
+
+Since existing API does not necessarily follow these guidelines,
+all of the above points should be explicitly mentioned in the
+documentation of each function they're relevant to.
+
+.. note::
+
+    For background and discussions, see:
+
+    - https://github.com/capi-workgroup/api-evolution/issues/32
+
+
+.. _shadowing example:
+
+Appendix A. Shadowing example
+=============================
+
+To provide a ``static inline`` equivalent to an exported function,
+write something like:
+
+Header:
+
+.. code-block:: c
+
+    static inline returntype
+    _Py_Foo_impl(ARGS)
+    {
+        ...
+    }
+
+    PyAPI_FUNC(returntype) Py_Foo (ARGS);
+
+    #define Py_Foo _Py_Foo_impl
+
+Code:
+
+.. code-block:: c
+
+    // at the end (after all calls to Py_Foo):
+    #undef Py_Foo
+
+    returntype
+    Py_Foo(ARGS)
+    {
+        return _Py_Foo_impl(ARGS);
+    }
+
+
+
+.. _return schemes:
+
+Appendix B. Return value schemes
+================================
+
+Here are common schemes of how to encode return values.
+
+*  Success or failure: return ``int``
+
+   * ``0`` for success
+   * ``-1``, with an exception set, for failure
+
+*  Yes or no: return ``int``
+
+   *  ``1`` for ``true``
+   *  ``0`` for ``false``
+   *  ``-1``, with an exception set, for failure
+
+*  Lookup (“getattr”, “getitem” or “setdefault” style) functions: return
+   ``int``; the lookup result is passed via an
+   :ref:`output argument <output argument>`):
+
+   *  ``1`` for “found” (*result* is set)
+   *  ``0`` for “not found”
+      (*result* is set to ``NULL`` or other zero/empty value)
+   *  ``-1``, with an exception set, for failure
+      (*result* is set to ``NULL`` or other zero/empty value)
+
+*  Enumeration-style: return ``int``
+
+   * ``-1``, with an exception set, for failure
+   * Zero and positive numbers for valid results
+
+*  Hashes: return ``Py_hash_t``
+
+   *  ``-1``, with an exception set, for failure
+   * All other numbers for result.
+
+*  Objects: return ``PyObject*``
+
+   * ``NULL``, with an exception set, for failure
+   * Valid pointer for result
