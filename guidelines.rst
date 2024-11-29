@@ -522,6 +522,73 @@ documentation of each function they're relevant to.
     - https://github.com/capi-workgroup/api-evolution/issues/32
 
 
+Function behavior
+=================
+
+Do not suppress errors
+----------------------
+
+New C API functions must not suppress unknown exceptions, except ones that
+specifically do just that (e.g. ``PyErr_Clear``).
+
+If a function has a common “failure” mode, like “attribute not found” from a
+``getattr``, you can treat it as success and signal it with a dedicated
+return value. This avoids creating an exception object.
+See also “Lookup” in :ref:`return schemes`.
+
+.. note::
+
+    For background and discussions, see:
+
+    - https://github.com/capi-workgroup/api-evolution/issues/35
+
+
+Do not allow mutating immutable objects
+---------------------------------------
+
+If an object is immutable in Python, C API may not mutate it either.
+
+It is of course fine to mutate implementation details: refcounts, lazily
+computed attributes and so on.
+
+Note that current API like ``PyUnicode_WRITE`` allows mutation to create an
+object, and it's up to the user to not use this API once the object is no
+longer “fresh”.
+A better precedent is the ``PyUnicodeWriter`` API, which allows complex set-up
+before creating a ``PyObject*`` object.
+
+.. note::
+
+    For background and discussions, see:
+
+    - https://github.com/capi-workgroup/api-evolution/issues/20
+
+
+Do not allow creating incomplete/invalid objects
+------------------------------------------------
+
+C API should not allow creating objects that cannot be immediately safely
+used from Python code.
+
+This rule is most important for -- but not limited to -- the GC protocol.
+Specifically, a traverse function must be safe to call right after an object
+is tracked with the GC.
+
+This is often realized by adding API to “finalize” an object after some initial
+set-up.
+It should be hard for users to forget calling such “finalization” functions.
+To make it hard, you can make the “unfinalized” object unusable or add a
+separate C type for the “unfinalized” object.
+(This separate type might share the final object's memory layout to make
+“finalization” inexpensive.)
+
+.. note::
+
+    For background and discussions, see:
+
+    - https://github.com/capi-workgroup/api-evolution/issues/36
+
+
 .. _shadowing example:
 
 Appendix A. Shadowing example
