@@ -298,7 +298,7 @@ avoid some of C's features:
 *  Avoid C-specific types like ``long long``, ``enum`` or bit fields
    (see :ref:`types`).
 
-Once you add API that conforms to this “portable subset”,
+Once you add API that conforms to this "portable subset",
 you can add additional C/C++-specific API. Usually, the additional API
 will be either more performant, or easier to use from C.
 For example:
@@ -531,10 +531,10 @@ Do not suppress errors
 New C API functions must not suppress unknown exceptions, except ones that
 specifically do just that (e.g. ``PyErr_Clear``).
 
-If a function has a common “failure” mode, like “attribute not found” from a
+If a function has a common "failure" mode, like “attribute not found” from a
 ``getattr``, you can treat it as success and signal it with a dedicated
 return value. This avoids creating an exception object.
-See also “Lookup” in :ref:`return schemes`.
+See also "Lookup" in :ref:`return schemes`.
 
 .. note::
 
@@ -553,7 +553,7 @@ computed attributes and so on.
 
 Note that current API like ``PyUnicode_WRITE`` allows mutation to create an
 object, and it's up to the user to not use this API once the object is no
-longer “fresh”.
+longer "fresh".
 A better precedent is the ``PyUnicodeWriter`` API, which allows complex set-up
 before creating a ``PyObject*`` object.
 
@@ -574,13 +574,13 @@ This rule is most important for -- but not limited to -- the GC protocol.
 Specifically, a traverse function must be safe to call right after an object
 is tracked with the GC.
 
-This is often realized by adding API to “finalize” an object after some initial
+This is often realized by adding API to "finalize" an object after some initial
 set-up.
-It should be hard for users to forget calling such “finalization” functions.
-To make it hard, you can make the “unfinalized” object unusable or add a
-separate C type for the “unfinalized” object.
+It should be hard for users to forget calling such "finalization" functions.
+To make it hard, you can make the "unfinalized" object unusable or add a
+separate C type for the "unfinalized" object.
 (This separate type might share the final object's memory layout to make
-“finalization” inexpensive.)
+"finalization" inexpensive.)
 
 .. note::
 
@@ -644,12 +644,12 @@ Here are common schemes of how to encode return values.
    *  ``0`` for ``false``
    *  ``-1``, with an exception set, for failure
 
-*  Lookup (“getattr”, “getitem” or “setdefault” style) functions: return
+*  Lookup ("getattr", “getitem” or “setdefault” style) functions: return
    ``int``; the lookup result is passed via an
    :ref:`output argument <output argument>`):
 
-   *  ``1`` for “found” (*result* is set)
-   *  ``0`` for “not found”
+   *  ``1`` for "found" (*result* is set)
+   *  ``0`` for "not found"
       (*result* is set to ``NULL`` or other zero/empty value)
    *  ``-1``, with an exception set, for failure
       (*result* is set to ``NULL`` or other zero/empty value)
