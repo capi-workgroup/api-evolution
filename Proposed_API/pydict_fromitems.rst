@@ -123,6 +123,25 @@ INADA-san wrote that most users either overestimate its effectiveness or don't
 fully understand how it operates.
 
 
+Add ``PyDict_SetAssumptions()`` function
+----------------------------------------
+
+Add ``PyDict_SetAssumptions()`` function to the C API::
+
+    int PyDict_SetAssumptions(Py_ssize_t size, unsigned int flags)
+
+    #define PY_DICTFLAG_UNICODE_KEYS 0x01
+
+Return ``1`` if the dictionary has been adjusted properly. Return ``0`` if the
+dictionary cannot be adjusted: the dictionary is left unchanged in this case.
+
+If *PY_DICTFLAG_UNICODE_KEYS* flag is used, optimize the dictionary lookup for
+Unicode keys.
+
+This API is similar to the ``PyDict_NewPresized()`` API, but it doesn't prevent
+using the dictionary on failure and it can be used on a non-empty dictionary.
+
+
 Add ``PyDict_FromKeysAndValues()`` and ``PyDict_FromItems()``
 -------------------------------------------------------------
 
