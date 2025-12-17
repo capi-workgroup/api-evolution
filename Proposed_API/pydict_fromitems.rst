@@ -5,6 +5,9 @@ Add ``PyDict_FromItems()`` function to the C API
 Rationale
 =========
 
+Private C API
+-------------
+
 For historical reasons, Python exposes private functions in its public C API.
 These functions are not tested, not documented, can change or even be removed
 anytime without notifying users. Private functions used by 3rd party projects
@@ -12,12 +15,46 @@ should be promoted to public functions to add tests, documentation and
 backward compatibility warranties.
 
 The private ``_PyDict_NewPresized()`` function is used by 11 projects of the
-PyPI top 15,000. It has a *min_used* argument to preallocate enough items for
-the created dictionary. Dictionaries can be optimized for Unicode keys, but
-``_PyDict_NewPresized()`` doesn't support that.
+PyPI top 15,000. API::
+
+    PyObject* _PyDict_NewPresized(Py_ssize_t minused)
+
+It preallocates *minused* items for the created dictionary.
+
+Unicode issue
+-------------
+
+The dictionary lookup can be optimized for Unicode keys if all keys are
+Unicode. ``_PyDict_NewPresized()`` doesn't support this optimization.
+
+On the other hand, ``PyDict_New()`` doesn't allocate the hashtable. The first
+``PyDict_SetItem()`` call allocates *minsize* (``8``) keys table with the
+information if the first key is Unicode or not.
+
+This is the main reason why CPython itself doesn't use
+``_PyDict_NewPresized()``, but use ``_PyDict_FromItems()`` instead. The private
+``_PyDict_FromItems()`` is similar to the public ``PyDict_FromItems()``
+proposed in this PEP.
+
+
+The false size header problem
+-----------------------------
+
+msgpack includes the size in the container header for preallocation. But by
+crafting a false size header, you can request the preallocation of a dictionary
+with 100 million elements using just 10 bytes of msgpack data.
+
+This is a problem for lists as well, but it becomes more serious for
+dictionaries, because they have a larger memory overhead per element.
+
+That's why in msgpack-python, ``_PyDict_NewPresized()`` is not used.
+
 
 Specification
 =============
+
+API
+---
 
 Add ``PyDict_FromItems()`` function to the C API::
 
@@ -39,6 +76,22 @@ Usage:
 
 On CPython, the function preallocates *length* items and scans *keys* to check
 if keys are all Unicode strings.
+
+Advantages
+----------
+
+``PyDict_FromItems()`` solves the different issues:
+
+* `Unicode issue`_: it scans keys to check if all keys are Unicode to enable
+  the Unicode keys lookup optimization.
+* `The false size header problem`_: the *length* argument provides exactly the
+  number of items.
+
+It's also faster than calling ``PyDict_New()`` + ``PyDict_SetItem()`` on each
+item: see `Benchmark`_.
+
+Replace private ``_PyStack_AsDict()``
+-------------------------------------
 
 Calls to the private ``PyObject* _PyStack_AsDict(PyObject *const *values,
 PyObject *kwnames)`` function can be replaced with::
@@ -117,10 +170,13 @@ If *unicode_keys* is true, optimize the created dictionary for keys which are
 only Unicode strings.
 
 The problem of this API is that it's too low-level: it exposes *unicode_keys*
-optimization which is an implementation detail.
+optimization which is an implementation detail. ``PyDict_FromItems()`` scans
+keys internally for the Unicode keys optimization
 
-INADA-san wrote that most users either overestimate its effectiveness or don't
-fully understand how it operates.
+INADA-san `wrote
+<https://github.com/python/cpython/issues/139772#issuecomment-3385134698>`__
+that most users either overestimate its effectiveness or don't fully understand
+how it operates.
 
 
 Add ``PyDict_SetAssumptions()`` function
@@ -135,11 +191,15 @@ Add ``PyDict_SetAssumptions()`` function to the C API::
 Return ``1`` if the dictionary has been adjusted properly. Return ``0`` if the
 dictionary cannot be adjusted: the dictionary is left unchanged in this case.
 
-If *PY_DICTFLAG_UNICODE_KEYS* flag is used, optimize the dictionary lookup for
+If the ``PY_DICTFLAG_UNICODE_KEYS`` flag is used, optimize the dictionary for
 Unicode keys.
 
 This API is similar to the ``PyDict_NewPresized()`` API, but it doesn't prevent
 using the dictionary on failure and it can be used on a non-empty dictionary.
+
+As ``PyDict_NewPresized()``, ``PyDict_SetAssumptions()`` is also too low-level
+with its ``PY_DICTFLAG_UNICODE_KEYS`` flag, compared to ``PyDict_FromItems()``
+which scans keys internally for the Unicode keys optimization.
 
 
 Add ``PyDict_FromKeysAndValues()`` and ``PyDict_FromItems()``
@@ -182,7 +242,8 @@ Create a new dictionary if *dict* is ``NULL``, or update an existing dictionary
 otherwise.
 
 Such function lacks an *override* argument to decide how to deal with
-overridden keys on updating an existing dictionary.
+overridden keys on updating an existing dictionary. It has one more argument
+than ``PyDict_FromItems()`` which already has 5 arguments.
 
 
 Discussions
