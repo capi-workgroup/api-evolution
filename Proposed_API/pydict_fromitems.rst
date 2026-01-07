@@ -75,7 +75,7 @@ Usage:
   and *value* is copied for all items.
 
 On CPython, the function preallocates *length* items and scans *keys* to check
-if keys are all Unicode strings.
+if all keys are Unicode strings.
 
 Advantages
 ----------
@@ -236,14 +236,18 @@ Add ``PyDict_MergeItems()`` function to the C API::
         Py_ssize_t keys_stride,
         PyObject *const *values,
         Py_ssize_t values_stride,
-        Py_ssize_t length)
+        Py_ssize_t length,
+        int override)
 
 Create a new dictionary if *dict* is ``NULL``, or update an existing dictionary
 otherwise.
 
-Such function lacks an *override* argument to decide how to deal with
-overridden keys on updating an existing dictionary. It has one more argument
-than ``PyDict_FromItems()`` which already has 5 arguments.
+If *override* is true, the last occurrence of a key wins, else the first.
+
+This API has two more parameters (*dict*, *override*) than
+``PyDict_FromItems()`` which already has 5 arguments, so it's more error prone
+and harder to use. It's way more common to create a dictionary (``dict=NULL``)
+than updating an existing dictionary (non-NULL ``dict``).
 
 
 Discussions
