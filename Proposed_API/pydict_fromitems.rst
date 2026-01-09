@@ -237,17 +237,21 @@ Add ``PyDict_MergeItems()`` function to the C API::
         PyObject *const *values,
         Py_ssize_t values_stride,
         Py_ssize_t length,
-        int override)
+        uint64 flags)
+
+    #define Py_DICTFLAG_KEEP_EXISTING 0x01
 
 Create a new dictionary if *dict* is ``NULL``, or update an existing dictionary
 otherwise.
 
-If *override* is true, the last occurrence of a key wins, else the first.
+Keys are overridden by default (*flags*=0). If the ``Py_DICTFLAG_KEEP_EXISTING``
+flag is set, existing keys are kept instead.
 
 This API has two more parameters (*dict*, *override*) than
-``PyDict_FromItems()`` which already has 5 arguments, so it's more error prone
-and harder to use. It's way more common to create a dictionary (``dict=NULL``)
-than updating an existing dictionary (non-NULL ``dict``).
+``PyDict_FromItems()`` which already has 5 arguments, so it's
+harder to use. It's way more common to create a dictionary (``dict=NULL``)
+than updating an existing dictionary (non-NULL ``dict``), but that might change
+if the ``PyDict_SetAssumptions()`` function is added.
 
 
 Discussions
