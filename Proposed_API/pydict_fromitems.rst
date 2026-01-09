@@ -249,7 +249,7 @@ flag is set, existing keys are kept instead.
 
 This API has two more parameters (*dict*, *override*) than
 ``PyDict_FromItems()`` which already has 5 arguments, so it's
-and harder to use. It's way more common to create a dictionary (``dict=NULL``)
+harder to use. It's way more common to create a dictionary (``dict=NULL``)
 than updating an existing dictionary (non-NULL ``dict``), but that might change
 if the ``PyDict_SetAssumptions()`` function is added.
 
